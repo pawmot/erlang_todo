@@ -2,7 +2,7 @@
 -author("pawmot").
 
 %% API
--export([init/0]).
+-export([init/0, loop/1]).
 
 -record(state, {events, clients}).
 -record(event, {name = "", description = "", pid, timeout = {{1970, 1, 1}, {0, 0, 0}}}).
@@ -57,7 +57,7 @@ loop(S = #state{}) ->
 
     shutdown ->
       exit(shutdown);
-    
+
     {'DOWN', Ref, process, _Pid, _Reason} ->
       loop(S#state{clients = orddict:erase(Ref, S#state.clients)});
 
