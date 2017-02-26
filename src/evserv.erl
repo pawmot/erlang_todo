@@ -43,7 +43,14 @@ loop(S = #state{}) ->
       Pid ! {MsgRef, ok},
       loop(S#state{events = Events});
     {done, Name} ->
-      ok;
+      case orddict:find(Name, S#state.events) of
+        {ok, E} ->
+          send_to_clients({done, E#event.name, E#event.description}, S#state.clients),
+          NewEvents = orddict:erase(Name, S#state.events),
+          loop(S#state{events = NewEvents});
+        error ->
+          loop(S)
+      end;
     shutdown ->
       ok;
     {'DOWN', Ref, process, _Pid, _Reason} ->
@@ -54,6 +61,9 @@ loop(S = #state{}) ->
       io:format("Unknown message: ~p~n", [Unknown]),
       loop(S)
   end.
+
+send_to_clients(Msg, ClientDict) ->
+  orddict:map(fun(_Ref, Pid) -> Pid ! Msg end, ClientDict).
 
 valid_datetime({Date, Time}) ->
   try
