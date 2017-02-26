@@ -17,7 +17,10 @@ init() ->
 loop(S = #state{}) ->
   receive
     {Pid, MsgRef, {subscribe, Client}} ->
-      ok;
+      Ref = erlang:monitor(process, Client),
+      NewClients = orddict:store(Ref, Client, S#state.clients),
+      Pid ! {MsgRef, ok},
+      loop(S#state{clients = NewClients});
     {Pid, MsgRef, {add, Name, Description, TimeOut}} ->
       ok;
     {Pid, MsgRef, {cancel, Name}} ->
