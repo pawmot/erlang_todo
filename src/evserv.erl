@@ -62,7 +62,7 @@ loop(S = #state{}) ->
       loop(S#state{clients = orddict:erase(Ref, S#state.clients)});
 
     code_change ->
-      ?MODULE:loop(S);
+      ?MODULE:loop(S); % This ensures that the newest loaded version of this module is used.
 
     Unknown ->
       io:format("Unknown message: ~p~n", [Unknown]),
