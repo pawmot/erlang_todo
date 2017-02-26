@@ -21,6 +21,7 @@ loop(S = #state{}) ->
       NewClients = orddict:store(Ref, Client, S#state.clients),
       Pid ! {MsgRef, ok},
       loop(S#state{clients = NewClients});
+
     {Pid, MsgRef, {add, Name, Description, TimeOut}} ->
       case valid_datetime(TimeOut) of
         true ->
@@ -32,6 +33,7 @@ loop(S = #state{}) ->
           Pid ! {MsgRef, {error, bad_timeout}},
           loop(S)
       end;
+
     {Pid, MsgRef, {cancel, Name}} ->
       Events = case orddict:find(Name, S#state.events) of
                  {ok, E} ->
@@ -42,6 +44,7 @@ loop(S = #state{}) ->
                end,
       Pid ! {MsgRef, ok},
       loop(S#state{events = Events});
+
     {done, Name} ->
       case orddict:find(Name, S#state.events) of
         {ok, E} ->
@@ -51,12 +54,16 @@ loop(S = #state{}) ->
         error ->
           loop(S)
       end;
+
     shutdown ->
-      ok;
+      exit(shutdown);
+    
     {'DOWN', Ref, process, _Pid, _Reason} ->
-      ok;
+      loop(S#state{clients = orddict:erase(Ref, S#state.clients)});
+
     code_change ->
-      ok;
+      ?MODULE:loop(S);
+
     Unknown ->
       io:format("Unknown message: ~p~n", [Unknown]),
       loop(S)
